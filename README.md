@@ -5,8 +5,6 @@
 [![Contributors](https://img.shields.io/github/contributors/TractionDAO/traction)](https://github.com/TractionDAO/traction/graphs/contributors)
 [![Chat](https://img.shields.io/badge/chat-on%20keybase-success)](https://keybase.io/team/TractionDAO)
 
-![Traction](/images/traction.png)
-
 Traction is a protocol for issuing American options on Solana.
 
 Follow us for updates below:
