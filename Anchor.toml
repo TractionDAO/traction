@@ -1,0 +1,27 @@
+anchor_version = "0.18.0"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "tests/fixture-key.json"
+
+[scripts]
+test = "yarn mocha"
+
+[[test.genesis]]
+address = "CRATwLpu6YZEeiVq9ajjxs61wPQ9f29s1UoQR9siJCRs"
+program = "./artifacts/programs/crate_token.so"
+
+[programs.mainnet]
+traction = "TRXf3r361YRfV6Zktov3nvdEqJwAuCowkjh4PUUBYEc"
+
+[programs.devnet]
+traction = "TRXf3r361YRfV6Zktov3nvdEqJwAuCowkjh4PUUBYEc"
+
+[programs.testnet]
+traction = "TRXf3r361YRfV6Zktov3nvdEqJwAuCowkjh4PUUBYEc"
+
+[programs.localnet]
+traction = "TRXf3r361YRfV6Zktov3nvdEqJwAuCowkjh4PUUBYEc"
