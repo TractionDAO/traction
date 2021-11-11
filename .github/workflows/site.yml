@@ -20,7 +20,7 @@ jobs:
       - name: Setup Cachix
         uses: cachix/cachix-action@v10
         with:
-          name: cash
+          name: traction
           extraPullNames: quarry, saber
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 

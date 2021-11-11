@@ -1229,10 +1229,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rushstack/eslint-patch@npm:^1.0.9":
-  version: 1.0.9
-  resolution: "@rushstack/eslint-patch@npm:1.0.9"
-  checksum: 01425d38261013955990e4e923bc57dd1ff258a09740a5cbf5645b6a61cd3c85255edd11801277c07022fabbdfdb39d1d324f6acb1bc0b1795d2a0a187b9569f
+"@rushstack/eslint-patch@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@rushstack/eslint-patch@npm:1.1.0"
+  checksum: 4602c23454c8bb03502da12398cb5c4c0bfb3b1772535b418ec94ab8c47824f70e6ff32206a35fe7086042d9516959edea439e2371147b1de7eee50ef03ace65
   languageName: node
   linkType: hard
 
@@ -1332,12 +1332,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/spl-token-registry@npm:^0.2.287":
-  version: 0.2.287
-  resolution: "@solana/spl-token-registry@npm:0.2.287"
+"@solana/spl-token-registry@npm:^0.2.291":
+  version: 0.2.291
+  resolution: "@solana/spl-token-registry@npm:0.2.291"
   dependencies:
     cross-fetch: 3.0.6
-  checksum: 02f8f3a6fb2f9937570c8b36377cc773427cd23de6d772e40e75d17b544f92b6ee0397d246fbfe55c83cfc4c9822e6a463a8cd3bcc8153c8e012e41b8e4a11b0
+  checksum: 732ef97b102f171b5bfd40d8189dd9ff113736f04fc07599c4b7d632d8dc869bc1408820e66c478f0ab6b876b0ef359433eedea0be876ff0ba049e02ed15ada7
   languageName: node
   linkType: hard
 
@@ -1412,24 +1412,24 @@ __metadata:
   dependencies:
     "@crateprotocol/crate-sdk": ^0.3.0
     "@project-serum/anchor": ^0.18.0
-    "@rushstack/eslint-patch": ^1.0.9
+    "@rushstack/eslint-patch": ^1.1.0
     "@saberhq/anchor-contrib": ^1.6.2
     "@saberhq/chai-solana": ^1.6.2
     "@saberhq/eslint-config": ^1.6.2
     "@saberhq/solana-contrib": ^1.6.2
     "@saberhq/token-utils": ^1.6.2
-    "@solana/spl-token-registry": ^0.2.287
+    "@solana/spl-token-registry": ^0.2.291
     "@solana/web3.js": ^1.30.2
     "@types/bn.js": ^5.1.0
     "@types/mocha": ^9.0.0
-    "@types/node": ^16.11.6
+    "@types/node": ^16.11.7
     "@types/prettier": ^2.4.1
     bn.js: ^5.2.0
     chai: ^4.3.4
     chai-bn: ^0.3.0
     eslint: ^7.32.0
     eslint-import-resolver-node: ^0.3.6
-    eslint-plugin-import: ^2.25.2
+    eslint-plugin-import: ^2.25.3
     husky: ^7.0.4
     jsbi: ^3.2.5
     lerna: ^4.0.0
@@ -1439,7 +1439,7 @@ __metadata:
     tiny-invariant: ^1.2.0
     ts-node: ^10.4.0
     tslib: ^2.3.1
-    typedoc: ^0.22.7
+    typedoc: ^0.22.8
     typescript: ^4.4.4
   peerDependencies:
     "@crateprotocol/crate-sdk": ^0.3.0
@@ -1591,10 +1591,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^16.11.6":
-  version: 16.11.6
-  resolution: "@types/node@npm:16.11.6"
-  checksum: 6e19634766ff589d3d2f361c2196b671f8f133cdadc5ad347a621c360d8994b6c4fbccfb2ad9c60c588c593831a96497c9c6b77d2b7e91be723384b94f6368e7
+"@types/node@npm:^16.11.7":
+  version: 16.11.7
+  resolution: "@types/node@npm:16.11.7"
+  checksum: 2706403e6efc4aa40fdce8f0b5d9884d5600c3c8610aedc7fa5e7e298d30366f7e8b7296028d52898dca3edef4c3e827b03bf20952c4780f13fa4e79864f7a86
   languageName: node
   linkType: hard
 
@@ -3336,7 +3336,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-module-utils@npm:^2.7.0":
+"eslint-module-utils@npm:^2.7.1":
   version: 2.7.1
   resolution: "eslint-module-utils@npm:2.7.1"
   dependencies:
@@ -3347,18 +3347,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:^2.25.2":
-  version: 2.25.2
-  resolution: "eslint-plugin-import@npm:2.25.2"
+"eslint-plugin-import@npm:^2.25.3":
+  version: 2.25.3
+  resolution: "eslint-plugin-import@npm:2.25.3"
   dependencies:
     array-includes: ^3.1.4
     array.prototype.flat: ^1.2.5
     debug: ^2.6.9
     doctrine: ^2.1.0
     eslint-import-resolver-node: ^0.3.6
-    eslint-module-utils: ^2.7.0
+    eslint-module-utils: ^2.7.1
     has: ^1.0.3
-    is-core-module: ^2.7.0
+    is-core-module: ^2.8.0
     is-glob: ^4.0.3
     minimatch: ^3.0.4
     object.values: ^1.1.5
@@ -3366,7 +3366,7 @@ __metadata:
     tsconfig-paths: ^3.11.0
   peerDependencies:
     eslint: ^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8
-  checksum: 4ca36e37faf72fb1ed25361ea8a6abbcc9daa65f3a9ac1dc0a660029000456e8c8b98a87b8cc2316541b13c6e5915df41d2dc4a1d7fe0729d9b72b9a3bd5b909
+  checksum: 8bdf4b1fafb0e5c8f57a1673f72d84307d32c06a23942990d198c8b32a85a5ae0098872d1ef5bf80d7dfe8ec542f6a671e3c5e706731a80b493c9015f7a147f5
   languageName: node
   linkType: hard
 
@@ -4530,7 +4530,7 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"is-core-module@npm:^2.2.0, is-core-module@npm:^2.5.0, is-core-module@npm:^2.7.0":
+"is-core-module@npm:^2.2.0, is-core-module@npm:^2.5.0, is-core-module@npm:^2.8.0":
   version: 2.8.0
   resolution: "is-core-module@npm:2.8.0"
   dependencies:
@@ -7931,9 +7931,9 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"typedoc@npm:^0.22.7":
-  version: 0.22.7
-  resolution: "typedoc@npm:0.22.7"
+"typedoc@npm:^0.22.8":
+  version: 0.22.8
+  resolution: "typedoc@npm:0.22.8"
   dependencies:
     glob: ^7.2.0
     lunr: ^2.3.9
@@ -7944,7 +7944,7 @@ fsevents@~2.3.2:
     typescript: 4.0.x || 4.1.x || 4.2.x || 4.3.x || 4.4.x
   bin:
     typedoc: bin/typedoc
-  checksum: cff0fc67dd069eabbd161644172e7da66cd4ad772f98c511d5d87d2bcd35851a7f8c232a9a70fdfa55c3d3f5fbcff8a44f263f2bbedeedb4202b9f8cb057d3fa
+  checksum: c54929f219f6663b55ce1314742467d621371c6e063cd41ec79bc5c2e30ddf2736d0ca5e32b22d5a1775e7ff60a6c0bc8d10d929c4955cdc90c681fa4612dcb6
   languageName: node
   linkType: hard
 
