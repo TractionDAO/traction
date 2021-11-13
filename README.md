@@ -18,7 +18,7 @@ Traction is a Solana protocol which handles the lifecycle of American options. T
 
 - `new_contract`: Creates a new options market associated with an underlying, a quote asset, a strike, a direction (put or call), and an expiry.
 - `write`: Issues an option, with the underlying held as collateral.
-- `exercise`: Exchangs quote tokens for underlying tokens at the strike price.
+- `exercise`: Exchanges quote tokens for underlying tokens at the strike price. A protocol fee of 1 basis point is taken here.
 - `redeem`: When the option has passed expiry, this allows an option writer to retrieve their underlying collateral.
 - _(unimplemented)_ `exit`: If the option has yet to expire, this allows an option writer to retrieve their collateral by buying an option off the open market.
 
