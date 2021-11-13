@@ -19,7 +19,7 @@ import {
 import type { PublicKey, Signer } from "@solana/web3.js";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 
-import { TRACTION_ADDRESSES } from "./constants";
+import { FEE_OWNER, TRACTION_ADDRESSES } from "./constants";
 import { TractionJSON } from "./idls/traction";
 import { OptionsContract } from "./optionsContract";
 import type { TractionProgram } from "./programs/traction";
@@ -174,12 +174,23 @@ export class TractionSDK {
       }
     );
 
+    // create the exercise fee ATA in creation
+    // so we don't have to keep fetching it later
+    const feeATAs = await getOrCreateATAs({
+      provider: this.provider,
+      mints: {
+        quote: optionsContract.quote.mintAccount,
+      },
+      owner: FEE_OWNER,
+    });
+
     const newContractTX = new TransactionEnvelope(
       this.provider,
       [
         ...createAccountInstructions,
         ...createWriterMint.instructions,
         ...createOptionMint.instructions,
+        ...feeATAs.instructions,
         newContractIx,
       ],
       [writerMintKP, optionMintKP]

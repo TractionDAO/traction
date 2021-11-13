@@ -1,10 +1,10 @@
 //! Program for issuing American options.
 
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use crate_token::CrateToken;
-use vipers::unwrap_int;
-use vipers::validate::Validate;
+use vipers::*;
 
 mod events;
 mod ixs;
@@ -13,6 +13,17 @@ mod state;
 
 pub use events::*;
 pub use state::*;
+
+/// Owner of all accounts that receives fees earned by the protocol.
+/// This is a PDA.
+pub static FEE_OWNER: Pubkey =
+    static_pubkey::static_pubkey!("2DDSpDyRbu9gZbcp2JCq2ZaA9FrCzXzoiyiGLyUFYSP5");
+
+/// Bump seed.
+pub const FEE_OWNER_BUMP: u8 = 255;
+
+/// Thousands of BPS of the exercise fee.
+pub const EXERCISE_FEE_KBPS: u64 = 1_000;
 
 declare_id!("TRXf3r361YRfV6Zktov3nvdEqJwAuCowkjh4PUUBYEc");
 
@@ -159,14 +170,14 @@ pub struct OptionExercise<'info> {
     /// The options contract.
     pub contract: Box<Account<'info, OptionsContract>>,
 
-    /// The user's quote tokens used to fund writing the options.
+    /// The [exerciser_authority]'s quote tokens used to pay for the exercise of the options.
     #[account(mut)]
     pub quote_token_source: Box<Account<'info, TokenAccount>>,
 
     /// The option mint.
     #[account(mut)]
     pub option_mint: Box<Account<'info, Mint>>,
-    /// The user's options tokens used to fund writing the options.
+    /// The [exerciser_authority]'s options tokens used to fund writing the options.
     #[account(mut)]
     pub option_token_source: Box<Account<'info, TokenAccount>>,
 
@@ -181,6 +192,9 @@ pub struct OptionExercise<'info> {
     /// The option token account to send to.
     #[account(mut)]
     pub underlying_token_destination: Box<Account<'info, TokenAccount>>,
+    /// The token account to send the quote asset to for exercise fees.
+    #[account(mut)]
+    pub exercise_fee_quote_destination: Box<Account<'info, TokenAccount>>,
 
     /// Token program.
     pub token_program: Program<'info, Token>,
@@ -246,4 +260,15 @@ pub enum ErrorCode {
     PutDecimalMismatch,
     #[msg("The underlying and quote mints should not match.")]
     UselessMints,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_fee_owner_address() {
+        let (key, bump) = Pubkey::find_program_address(&[b"TractionDAOFees"], &crate::ID);
+        assert_eq!(key, FEE_OWNER);
+        assert_eq!(bump, FEE_OWNER_BUMP);
+    }
 }

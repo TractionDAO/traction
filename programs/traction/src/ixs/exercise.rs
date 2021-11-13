@@ -2,7 +2,6 @@
 
 use crate::*;
 use anchor_spl::token;
-use vipers::assert_keys_eq;
 
 impl<'info> OptionExercise<'info> {
     /// Exercise the option
@@ -12,6 +11,12 @@ impl<'info> OptionExercise<'info> {
             unwrap_int!(contract.calculate_quote_amount_for_options(option_amount));
 
         // Send quote tokens from exerciser to the writer crate
+        let exercise_fee = unwrap_int!(quote_amount
+            .checked_mul(EXERCISE_FEE_KBPS)
+            .and_then(|f| f.checked_div(10_000 * 1_000)));
+        let quote_received = unwrap_int!(quote_amount.checked_sub(exercise_fee));
+
+        // exercise quote
         token::transfer(
             CpiContext::new(
                 self.token_program.to_account_info(),
@@ -21,7 +26,19 @@ impl<'info> OptionExercise<'info> {
                     authority: self.exerciser_authority.to_account_info(),
                 },
             ),
-            quote_amount,
+            quote_received,
+        )?;
+        // exercise fee
+        token::transfer(
+            CpiContext::new(
+                self.token_program.to_account_info(),
+                token::Transfer {
+                    from: self.quote_token_source.to_account_info(),
+                    to: self.exercise_fee_quote_destination.to_account_info(),
+                    authority: self.exerciser_authority.to_account_info(),
+                },
+            ),
+            exercise_fee,
         )?;
 
         // Burn exerciser's option tokens

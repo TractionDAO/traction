@@ -3,6 +3,7 @@ import type { Provider } from "@saberhq/solana-contrib";
 import { TransactionEnvelope } from "@saberhq/solana-contrib";
 import type { Price, TokenInfo } from "@saberhq/token-utils";
 import {
+  getATAAddress,
   getOrCreateATAs,
   Token,
   TOKEN_PROGRAM_ID,
@@ -10,10 +11,14 @@ import {
 } from "@saberhq/token-utils";
 import type { PublicKey } from "@solana/web3.js";
 
+import { FEE_OWNER } from ".";
 import { findOptionsContractAddress } from "./pda";
 import type { OptionsContractData, TractionProgram } from "./programs/traction";
 import type { TractionSDK } from "./traction";
 
+/**
+ * Wrapper for interacting with an options contract.
+ */
 export class OptionsContract {
   private _data: OptionsContractData | null = null;
 
@@ -281,6 +286,10 @@ export class OptionsContract {
       },
       owner: contractData.writerCrate,
     });
+    const exerciseFeeQuoteDestination = await getATAAddress({
+      mint: this.quote.mintAccount,
+      owner: FEE_OWNER,
+    });
 
     const writeIX = this.program.instruction.optionExercise(
       optionAmount.toU64(),
@@ -296,6 +305,7 @@ export class OptionsContract {
           writerCrateToken: contractData.writerCrate,
           crateUnderlyingTokens: crateATAs.accounts.underlying,
           underlyingTokenDestination: writerATAs.accounts.underlying,
+          exerciseFeeQuoteDestination,
 
           tokenProgram: TOKEN_PROGRAM_ID,
           crateTokenProgram: CRATE_ADDRESSES.CrateToken,

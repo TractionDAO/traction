@@ -2,7 +2,6 @@
 
 use crate::*;
 use anchor_spl::token;
-use vipers::assert_keys_eq;
 
 impl<'info> OptionRedeem<'info> {
     /// Helper to redeem the writer crate.

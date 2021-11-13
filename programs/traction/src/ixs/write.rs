@@ -2,7 +2,6 @@
 
 use crate::*;
 use anchor_spl::token;
-use vipers::assert_keys_eq;
 
 impl<'info> OptionWrite<'info> {
     pub fn write(&self, write_amount: u64) -> ProgramResult {

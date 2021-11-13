@@ -17,6 +17,7 @@ import {
   u64,
 } from "@saberhq/token-utils";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import BN from "bn.js";
 import chai, { expect } from "chai";
 
 import type { TractionSDK } from "../src/traction";
@@ -162,10 +163,13 @@ describe("Traction options", () => {
     });
     await expectTX(redeemTX, "redeem").to.be.fulfilled;
 
-    // we should have the cash again
+    // we should have the cash again,
+    // minus exercise fees
     expect(
       (await getTokenAccount(provider, ownerATAs.accounts.quote)).amount
-    ).to.bignumber.eq(quoteAmount);
+    ).to.bignumber.eq(
+      quoteAmount.sub(new u64(1_000 * 100).div(new BN(10_000)))
+    );
     expect(
       (await getTokenAccount(provider, ownerWriterAccount)).amount
     ).to.bignumber.eq(new u64(0));
