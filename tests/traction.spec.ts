@@ -19,6 +19,7 @@ import {
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import BN from "bn.js";
 import chai, { expect } from "chai";
+import invariant from "tiny-invariant";
 
 import type { TractionSDK } from "../src/traction";
 import { dateToTimestamp } from "../src/utils";
@@ -117,6 +118,14 @@ describe("Traction options", () => {
     });
     const optionToken = await optionsContract.generateToken();
     const writerToken = await optionsContract.fetchWriterToken();
+
+    // ensure that we can load the contract by key
+    const [optionsContractKey] = await optionsContract.findAddress();
+    const loaded = await sdk.loadContractFromKey({ key: optionsContractKey });
+    expect(loaded).to.not.be.null;
+    invariant(loaded);
+    const [loadedAddr] = await loaded.findAddress();
+    expect(loadedAddr).to.eqAddress(optionsContractKey);
 
     const ownerWriterAccount = await getATAAddress({
       mint: writerToken.mintAccount,

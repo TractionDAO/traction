@@ -9,10 +9,12 @@ import {
   SolanaProvider,
   TransactionEnvelope,
 } from "@saberhq/solana-contrib";
-import type { Price } from "@saberhq/token-utils";
 import {
   createInitMintInstructions,
+  deserializeMint,
   getOrCreateATAs,
+  Price,
+  Token,
   TokenAmount,
   u64,
 } from "@saberhq/token-utils";
@@ -22,7 +24,7 @@ import { Keypair, SystemProgram } from "@solana/web3.js";
 import { FEE_OWNER, TRACTION_ADDRESSES } from "./constants";
 import { TractionJSON } from "./idls/traction";
 import { OptionsContract } from "./optionsContract";
-import type { TractionProgram } from "./programs/traction";
+import type { OptionsContractData, TractionProgram } from "./programs/traction";
 
 /**
  * Programs associated with the Traction protocol.
@@ -88,6 +90,60 @@ export class TractionSDK {
   }): OptionsContract {
     const isPut = direction === "put";
     return new OptionsContract(this, strike, expiryTs, isPut);
+  }
+
+  async loadContractFromKey({
+    key,
+    underlying,
+    quote,
+  }: {
+    key: PublicKey;
+    underlying?: Token;
+    quote?: Token;
+  }): Promise<OptionsContract | null> {
+    const contractData =
+      (await this.programs.Traction.account.optionsContract.fetchNullable(
+        key
+      )) as OptionsContractData | null;
+    if (!contractData) {
+      return null;
+    }
+    if (!underlying) {
+      const underlyingMintRaw = await this.provider.getAccountInfo(
+        contractData.underlyingMint
+      );
+      if (!underlyingMintRaw) {
+        throw new Error(
+          `Could not fetch underlying mint: ${contractData.underlyingMint.toString()}`
+        );
+      }
+      const underlyingMintParsed = deserializeMint(
+        underlyingMintRaw.accountInfo.data
+      );
+      underlying = Token.fromMint(
+        contractData.underlyingMint,
+        underlyingMintParsed.decimals
+      );
+    }
+    if (!quote) {
+      const quoteMintRaw = await this.provider.getAccountInfo(
+        contractData.quoteMint
+      );
+      if (!quoteMintRaw) {
+        throw new Error(
+          `Could not fetch quote mint: ${contractData.quoteMint.toString()}`
+        );
+      }
+      const quoteMintParsed = deserializeMint(quoteMintRaw.accountInfo.data);
+      quote = Token.fromMint(contractData.quoteMint, quoteMintParsed.decimals);
+    }
+    const strike = new Price(underlying, quote, 10 ** 9, contractData.strike);
+    return new OptionsContract(
+      this,
+      strike,
+      contractData.expiryTs.toNumber(),
+      !!contractData.isPut
+    );
   }
 
   /**
