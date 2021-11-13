@@ -260,6 +260,8 @@ pub enum ErrorCode {
     PutDecimalMismatch,
     #[msg("The underlying and quote mints should not match.")]
     UselessMints,
+    #[msg("Option mint must have zero supply.")]
+    OptionMintMustHaveZeroSupply,
 }
 
 #[cfg(test)]
