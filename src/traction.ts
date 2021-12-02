@@ -24,7 +24,7 @@ import { Keypair, SystemProgram } from "@solana/web3.js";
 import { FEE_OWNER, TRACTION_ADDRESSES } from "./constants";
 import { TractionJSON } from "./idls/traction";
 import { OptionsContract } from "./optionsContract";
-import type { OptionsContractData, TractionProgram } from "./programs/traction";
+import type { TractionProgram } from "./programs/traction";
 
 /**
  * Programs associated with the Traction protocol.
@@ -102,9 +102,7 @@ export class TractionSDK {
     quote?: Token;
   }): Promise<OptionsContract | null> {
     const contractData =
-      (await this.programs.Traction.account.optionsContract.fetchNullable(
-        key
-      )) as OptionsContractData | null;
+      await this.programs.Traction.account.optionsContract.fetchNullable(key);
     if (!contractData) {
       return null;
     }
