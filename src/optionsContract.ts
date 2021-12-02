@@ -82,7 +82,7 @@ export class OptionsContract {
    * Human-readable expiry of the option.
    */
   get formattedExpiry(): string {
-    const expiry = new Date(this.expiryTs);
+    const expiry = new Date(this.expiryTs * 1000);
     if (expiry.getFullYear() === new Date().getFullYear()) {
       return expiry.toLocaleDateString(undefined, {
         day: "numeric",
@@ -95,7 +95,7 @@ export class OptionsContract {
    * Human-readable expiry of the option. Meant to be used in the symbol.
    */
   get formattedExpiryShort(): string {
-    const expiry = new Date(this.expiryTs);
+    const expiry = new Date(this.expiryTs * 1000);
     const monthStr = expiry
       .toLocaleDateString(undefined, { month: "short" })
       .toUpperCase();
