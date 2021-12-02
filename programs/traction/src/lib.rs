@@ -57,6 +57,11 @@ pub mod traction {
             .new_contract(strike, expiry_ts, is_put, contract_bump, crate_bump)
     }
 
+    #[access_control(ctx.accounts.validate())]
+    pub fn option_burn(ctx: Context<OptionBurn>, write_amount: u64) -> ProgramResult {
+        ctx.accounts.burn(write_amount)
+    }
+
     /// Write new options
     #[access_control(ctx.accounts.validate())]
     pub fn option_write(ctx: Context<OptionWrite>, write_amount: u64) -> ProgramResult {
@@ -200,6 +205,30 @@ pub struct OptionExercise<'info> {
     pub token_program: Program<'info, Token>,
     /// Crate token program.
     pub crate_token_program: Program<'info, crate_token::program::CrateToken>,
+}
+
+/// Accounts for [traction::option_burn].
+#[derive(Accounts)]
+
+pub struct OptionBurn<'info> {
+    pub contract: Box<Account<'info, OptionsContract>>,
+
+    /// The [exerciser_authority]'s quote tokens used to pay for the exercise of the options.
+    #[account(mut)]
+    pub writer_token_source: Box<Account<'info, TokenAccount>>,
+
+    /// The [exerciser_authority]'s quote tokens used to pay for the exercise of the options.
+    #[account(mut)]
+    pub option_token_source: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub underlying_token_destination: Box<Account<'info, TokenAccount>>,
+
+    /// [Mint] of the underlying asset.
+    pub underlying_mint: Account<'info, Mint>,
+
+    /// The [CrateToken] of the writer.
+    pub writer_crate: WriterCrate<'info>,
 }
 
 /// Accounts for [traction::option_redeem].
