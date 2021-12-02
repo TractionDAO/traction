@@ -5,6 +5,8 @@ dist/
 target/
 yarn-error.log
 
+test-ledger/
+
 .yarn/*
 !.yarn/patches
 !.yarn/releases
