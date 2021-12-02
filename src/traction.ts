@@ -2,11 +2,10 @@ import {
   CRATE_ADDRESSES,
   generateCrateAddress,
 } from "@crateprotocol/crate-sdk";
-import { Program, Provider as AnchorProvider } from "@project-serum/anchor";
-import type { Provider } from "@saberhq/solana-contrib";
+import { newProgramMap } from "@saberhq/anchor-contrib";
+import type { AugmentedProvider, Provider } from "@saberhq/solana-contrib";
 import {
-  SignerWallet,
-  SolanaProvider,
+  SolanaAugmentedProvider,
   TransactionEnvelope,
 } from "@saberhq/solana-contrib";
 import {
@@ -38,7 +37,7 @@ export interface TractionPrograms {
  */
 export class TractionSDK {
   constructor(
-    public readonly provider: Provider,
+    public readonly provider: AugmentedProvider,
     public readonly programs: TractionPrograms
   ) {}
 
@@ -48,32 +47,21 @@ export class TractionSDK {
    * @returns
    */
   static init(provider: Provider): TractionSDK {
-    const anchorProvider = new AnchorProvider(
-      provider.connection,
-      provider.wallet,
-      provider.opts
+    return new TractionSDK(
+      new SolanaAugmentedProvider(provider),
+      newProgramMap<TractionPrograms>(
+        provider,
+        { Traction: TractionJSON },
+        TRACTION_ADDRESSES
+      )
     );
-    return new TractionSDK(provider, {
-      Traction: new Program(
-        TractionJSON,
-        TRACTION_ADDRESSES.Traction,
-        anchorProvider
-      ) as unknown as TractionProgram,
-    });
   }
 
   /**
    * Creates a new instance of the SDK with the given keypair.
    */
-  public withSigner(signer: Signer): TractionSDK {
-    return TractionSDK.init(
-      new SolanaProvider(
-        this.provider.connection,
-        this.provider.broadcaster,
-        new SignerWallet(signer),
-        this.provider.opts
-      )
-    );
+  withSigner(signer: Signer): TractionSDK {
+    return TractionSDK.init(this.provider.withSigner(signer));
   }
 
   loadContract({
