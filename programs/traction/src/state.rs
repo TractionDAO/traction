@@ -1,5 +1,7 @@
 //! State accounts.
 
+use num_traits::cast::ToPrimitive;
+
 use crate::*;
 
 /// Number of units of the underlying the strike price is denominated in.
@@ -17,9 +19,7 @@ pub struct OptionsContract {
     pub strike: u64,
     /// When the option expires.
     pub expiry_ts: i64,
-    /// If the Option prefers to be rendered as a PUT.
-    /// If true, the decimals of the token must be equal to that of the quote mint.
-    /// If false, the decimals of the options token should be equal to that of the underlying mint.
+    /// If the option is a put.
     pub is_put: bool,
     /// Bump seed.
     pub bump: u8,
@@ -28,18 +28,51 @@ pub struct OptionsContract {
     pub writer_mint: Pubkey,
     /// The [crate_token::CrateToken] of the writer tokens.
     pub writer_crate: Pubkey,
-    /// The underlying tokens of the crate.
-    pub crate_underlying_tokens: Pubkey,
-    /// The quote tokens of the crate.
-    pub crate_quote_tokens: Pubkey,
+    /// The collateral tokens of the crate.
+    pub crate_collateral_tokens: Pubkey,
+    /// The exercise tokens of the crate.
+    pub crate_exercise_tokens: Pubkey,
     /// The option which can be exercised.
     pub option_mint: Pubkey,
 }
 
 impl OptionsContract {
-    pub fn calculate_quote_amount_for_options(&self, option_amount: u64) -> Option<u64> {
-        option_amount
-            .checked_mul(self.strike)?
-            .checked_div(STRIKE_PRICE_UNITS)
+    /// Mint of the collateral.
+    /// If a call, this is the underlying.
+    /// If a put, this is the quote.
+    pub fn collateral_mint(&self) -> Pubkey {
+        if self.is_put {
+            self.quote_mint
+        } else {
+            self.underlying_mint
+        }
+    }
+
+    /// Mint of the exercise.
+    pub fn exercise_mint(&self) -> Pubkey {
+        if self.is_put {
+            self.underlying_mint
+        } else {
+            self.quote_mint
+        }
+    }
+
+    /// Calculates the number of exercise tokens that correspond
+    /// to the number of options tokens.
+    /// The amount is equal
+    pub fn calculate_exercise_amount_for_options(&self, option_amount: u64) -> Option<u64> {
+        if self.is_put {
+            // if underlying is the token to pay the exercise with,
+            // divide by the strike price to get the exercise amount.
+            (option_amount as u128)
+                .checked_mul(STRIKE_PRICE_UNITS.into())?
+                .checked_div(self.strike.into())?
+                .to_u64()
+        } else {
+            (option_amount as u128)
+                .checked_mul(self.strike.into())?
+                .checked_div(STRIKE_PRICE_UNITS.into())?
+                .to_u64()
+        }
     }
 }
