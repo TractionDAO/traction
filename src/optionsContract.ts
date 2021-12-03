@@ -79,23 +79,35 @@ export class OptionsContract {
   }
 
   /**
+   * Expiry date.
+   */
+  get expiry(): Date {
+    return new Date(this.expiryTs * 1_000);
+  }
+
+  /**
    * Human-readable expiry of the option.
    */
   get formattedExpiry(): string {
-    const expiry = new Date(this.expiryTs * 1000);
+    const expiry = this.expiry;
     if (expiry.getFullYear() === new Date().getFullYear()) {
       return expiry.toLocaleDateString(undefined, {
+        month: "short",
         day: "numeric",
       });
     }
-    return expiry.toLocaleDateString();
+    return expiry.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   }
 
   /**
    * Human-readable expiry of the option. Meant to be used in the symbol.
    */
   get formattedExpiryShort(): string {
-    const expiry = new Date(this.expiryTs * 1000);
+    const expiry = this.expiry;
     const monthStr = expiry
       .toLocaleDateString(undefined, { month: "short" })
       .toUpperCase();
