@@ -1,6 +1,6 @@
 {
   "name": "@tractiondao/traction",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "SDK for the Traction Protocol, the premier protocol for issuing and trading American options on Solana.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
