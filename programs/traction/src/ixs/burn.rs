@@ -7,18 +7,16 @@ impl<'info> OptionBurn<'info> {
     /// Helper to redeem the writer crate.
     /// This is not necessary.
     pub fn burn(&self, burn_amount: u64) -> ProgramResult {
-        require!(burn_amount > 0);
-        require!(burn_amount == self.writer_token_source.amount);
-        require!(burn_amount == self.option_token_source.amount);
+        assert!(burn_amount > 0);
 
         // burn writer tokens
         token::burn(
             CpiContext::new(
                 self.token_program.to_account_info(),
                 token::Burn {
-                    mint: self.writer_token_source.mint.to_account_info(),
+                    mint: self.writer_mint.to_account_info(),
                     to: self.writer_token_source.to_account_info(),
-                    authority: self.user_authority.to_account_info(),
+                    authority: self.writer_authority.to_account_info(),
                 },
             ),
             burn_amount,
@@ -29,9 +27,9 @@ impl<'info> OptionBurn<'info> {
             CpiContext::new(
                 self.token_program.to_account_info(),
                 token::Burn {
-                    mint: self.option_token_source.mint.to_account_info(),
+                    mint: self.option_mint.to_account_info(),
                     to: self.option_token_source.to_account_info(),
-                    authority: self.user_authority.to_account_info(),
+                    authority: self.writer_authority.to_account_info(),
                 },
             ),
             burn_amount,
@@ -70,21 +68,16 @@ impl<'info> OptionBurn<'info> {
 
 impl<'info> Validate<'info> for OptionBurn<'info> {
     fn validate(&self) -> ProgramResult {
-        // can only redeem when the contract has expired.
-        let now = Clock::get()?.unix_timestamp;
-        require!(now >= self.contract.expiry_ts, ContractNotYetExpired);
-
-        // validate writer_mint
-        // validate option_mint
         assert_keys_eq!(self.option_mint, self.contract.option_mint);
+        assert_keys_eq!(self.writer_mint, self.contract.writer_mint);
 
         assert_keys_eq!(self.writer_token_source.mint, self.contract.writer_mint);
         assert_keys_eq!(self.option_token_source.mint, self.contract.option_mint);
 
+        assert_keys_eq!(self.writer_authority, self.option_token_source.owner);
         assert_keys_eq!(self.writer_authority, self.writer_token_source.owner);
-        assert_keys_eq!(self.writer_token_source.mint, self.contract.writer_mint);
-        // underlying_token_destination and quote_token_destination don't really matter to validate
 
+        // underlying_token_destination and quote_token_destination don't really matter to validate
         assert_keys_eq!(self.writer_crate_token, self.contract.writer_crate);
         assert_keys_eq!(
             self.crate_underlying_tokens,

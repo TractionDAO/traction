@@ -21,7 +21,7 @@ pub struct OptionBurnEvent {
 
     pub burn_amount: u64,
 
-    pub timestap: i64,
+    pub timestamp: i64,
 }
 
 /// Emitted on [traction::option_redeem].

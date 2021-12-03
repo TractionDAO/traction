@@ -211,15 +211,30 @@ pub struct OptionExercise<'info> {
 #[derive(Accounts)]
 
 pub struct OptionBurn<'info> {
+    /// The authority of the [self::writer_token_source] account.
+    #[account(mut)]
+    pub writer_authority: Signer<'info>,
+
     pub contract: Box<Account<'info, OptionsContract>>,
 
-    /// The [exerciser_authority]'s quote tokens used to pay for the exercise of the options.
+    /// The [Mint] of the writer mint.
+    #[account(mut)]
+    pub writer_mint: Box<Account<'info, Mint>>,
+
+    /// The [Mint] of the option instrument.
+    #[account(mut)]
+    pub option_mint: Box<Account<'info, Mint>>,
+
+    /// The [burner_authority]'s quote tokens used to pay for the exercise of the options.
     #[account(mut)]
     pub writer_token_source: Box<Account<'info, TokenAccount>>,
 
-    /// The [exerciser_authority]'s quote tokens used to pay for the exercise of the options.
+    /// The [burner_authority]'s quote tokens used to pay for the exercise of the options.
     #[account(mut)]
     pub option_token_source: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub crate_underlying_tokens: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub underlying_token_destination: Box<Account<'info, TokenAccount>>,
@@ -227,8 +242,19 @@ pub struct OptionBurn<'info> {
     /// [Mint] of the underlying asset.
     pub underlying_mint: Account<'info, Mint>,
 
+    /// The writer crate token.
+    pub writer_crate_token: Box<Account<'info, CrateToken>>,
+
     /// The [CrateToken] of the writer.
     pub writer_crate: WriterCrate<'info>,
+
+    #[account(mut)]
+    pub crate_quote_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Token program.
+    pub token_program: Program<'info, Token>,
+    /// Crate token program.
+    pub crate_token_program: Program<'info, crate_token::program::CrateToken>,
 }
 
 /// Accounts for [traction::option_redeem].
