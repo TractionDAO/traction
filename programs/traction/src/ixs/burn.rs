@@ -9,6 +9,10 @@ impl<'info> OptionBurn<'info> {
     pub fn burn(&self, burn_amount: u64) -> ProgramResult {
         assert!(burn_amount > 0);
 
+        // TODO: named errors?
+        assert!(burn_amount <= self.writer_token_source.amount);
+        assert!(burn_amount <= self.option_token_source.amount);
+
         // burn writer tokens
         token::burn(
             CpiContext::new(
