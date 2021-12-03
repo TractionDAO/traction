@@ -11,9 +11,14 @@ impl<'info> OptionBurn<'info> {
             return Ok(());
         }
 
-        // TODO: named errors?
-        assert!(burn_amount <= self.writer_token_source.amount);
-        assert!(burn_amount <= self.option_token_source.amount);
+        invariant!(
+            burn_amount <= self.writer_token_source.amount,
+            "insufficient funds"
+        );
+        invariant!(
+            burn_amount <= self.option_token_source.amount,
+            "insufficient funds"
+        );
 
         // burn writer tokens
         token::burn(
