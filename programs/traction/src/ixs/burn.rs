@@ -4,10 +4,12 @@ use crate::*;
 use anchor_spl::token;
 
 impl<'info> OptionBurn<'info> {
-    /// Helper to redeem the writer crate.
-    /// This is not necessary.
+    /// Helper to burn options in case one no longer wants exposure.
     pub fn burn(&self, burn_amount: u64) -> ProgramResult {
-        assert!(burn_amount > 0);
+        // exit if nothing to burn
+        if burn_amount == 0 {
+            return Ok(());
+        }
 
         // burn writer tokens
         token::burn(
@@ -16,7 +18,7 @@ impl<'info> OptionBurn<'info> {
                 token::Burn {
                     mint: self.writer_mint.to_account_info(),
                     to: self.writer_token_source.to_account_info(),
-                    authority: self.writer_authority.to_account_info(),
+                    authority: self.burner_authority.to_account_info(),
                 },
             ),
             burn_amount,
@@ -29,7 +31,7 @@ impl<'info> OptionBurn<'info> {
                 token::Burn {
                     mint: self.option_mint.to_account_info(),
                     to: self.option_token_source.to_account_info(),
-                    authority: self.writer_authority.to_account_info(),
+                    authority: self.burner_authority.to_account_info(),
                 },
             ),
             burn_amount,
@@ -58,7 +60,7 @@ impl<'info> OptionBurn<'info> {
 
         emit!(OptionBurnEvent {
             contract: self.contract.key(),
-            burn_amount: burn_amount,
+            burn_amount,
             timestamp: Clock::get()?.unix_timestamp,
         });
 
@@ -72,10 +74,10 @@ impl<'info> Validate<'info> for OptionBurn<'info> {
         assert_keys_eq!(self.writer_mint, self.contract.writer_mint);
 
         assert_keys_eq!(self.writer_token_source.mint, self.contract.writer_mint);
-        assert_keys_eq!(self.option_token_source.mint, self.contract.option_mint);
+        assert_keys_eq!(self.writer_token_source.owner, self.burner_authority);
 
-        assert_keys_eq!(self.writer_authority, self.option_token_source.owner);
-        assert_keys_eq!(self.writer_authority, self.writer_token_source.owner);
+        assert_keys_eq!(self.option_token_source.mint, self.contract.option_mint);
+        assert_keys_eq!(self.option_token_source.owner, self.burner_authority);
 
         // underlying_token_destination and quote_token_destination don't really matter to validate
         assert_keys_eq!(self.writer_crate_token, self.contract.writer_crate);
@@ -83,7 +85,6 @@ impl<'info> Validate<'info> for OptionBurn<'info> {
             self.crate_underlying_tokens,
             self.contract.crate_underlying_tokens
         );
-        assert_keys_eq!(self.crate_quote_tokens, self.contract.crate_quote_tokens);
 
         Ok(())
     }

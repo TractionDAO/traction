@@ -5,7 +5,6 @@ use anchor_spl::token;
 
 impl<'info> OptionRedeem<'info> {
     /// Helper to redeem the writer crate.
-    /// This is not necessary.
     pub fn redeem(&self, writer_amount: u64) -> ProgramResult {
         // calculate share of the tokens
         let underlying_amount = unwrap_int!(self

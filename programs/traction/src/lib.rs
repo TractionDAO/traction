@@ -57,9 +57,10 @@ pub mod traction {
             .new_contract(strike, expiry_ts, is_put, contract_bump, crate_bump)
     }
 
+    /// Burns equal parts option and writer tokens to get the underlying.
     #[access_control(ctx.accounts.validate())]
-    pub fn option_burn(ctx: Context<OptionBurn>, write_amount: u64) -> ProgramResult {
-        ctx.accounts.burn(write_amount)
+    pub fn option_burn(ctx: Context<OptionBurn>, burn_amount: u64) -> ProgramResult {
+        ctx.accounts.burn(burn_amount)
     }
 
     /// Write new options
@@ -132,8 +133,7 @@ pub struct WriterCrate<'info> {
 /// Accounts for [traction::option_write].
 #[derive(Accounts)]
 pub struct OptionWrite<'info> {
-    /// The authority of the [user_underlying_funding_tokens] account.
-    #[account(mut)]
+    /// The authority of the [OptionWrite::user_underlying_funding_tokens] account.
     pub writer_authority: Signer<'info>,
     /// The options contract.
     pub contract: Box<Account<'info, OptionsContract>>,
@@ -169,20 +169,19 @@ pub struct OptionWrite<'info> {
 /// Accounts for [traction::option_exercise].
 #[derive(Accounts)]
 pub struct OptionExercise<'info> {
-    /// The authority of the [option_token_source] account.
-    #[account(mut)]
+    /// The authority of the [OptionExercise::option_token_source] account.
     pub exerciser_authority: Signer<'info>,
     /// The options contract.
     pub contract: Box<Account<'info, OptionsContract>>,
 
-    /// The [exerciser_authority]'s quote tokens used to pay for the exercise of the options.
+    /// The [OptionExercise::exerciser_authority]'s quote tokens used to pay for the exercise of the options.
     #[account(mut)]
     pub quote_token_source: Box<Account<'info, TokenAccount>>,
 
     /// The option mint.
     #[account(mut)]
     pub option_mint: Box<Account<'info, Mint>>,
-    /// The [exerciser_authority]'s options tokens used to fund writing the options.
+    /// The [OptionExercise::exerciser_authority]'s options tokens used to fund writing the options.
     #[account(mut)]
     pub option_token_source: Box<Account<'info, TokenAccount>>,
 
@@ -211,10 +210,10 @@ pub struct OptionExercise<'info> {
 #[derive(Accounts)]
 
 pub struct OptionBurn<'info> {
-    /// The authority of the [self::writer_token_source] account.
-    #[account(mut)]
-    pub writer_authority: Signer<'info>,
+    /// The account which is burning tokens.
+    pub burner_authority: Signer<'info>,
 
+    /// The [OptionsContract] getting burned.
     pub contract: Box<Account<'info, OptionsContract>>,
 
     /// The [Mint] of the writer mint.
@@ -225,34 +224,28 @@ pub struct OptionBurn<'info> {
     #[account(mut)]
     pub option_mint: Box<Account<'info, Mint>>,
 
-    /// The [burner_authority]'s quote tokens used to pay for the exercise of the options.
+    /// The [OptionBurn::burner_authority]'s quote tokens used to pay for the exercise of the options.
     #[account(mut)]
     pub writer_token_source: Box<Account<'info, TokenAccount>>,
 
-    /// The [burner_authority]'s quote tokens used to pay for the exercise of the options.
+    /// The [OptionBurn::burner_authority]'s quote tokens used to pay for the exercise of the options.
     #[account(mut)]
     pub option_token_source: Box<Account<'info, TokenAccount>>,
 
+    /// Crate source of underlying tokens.
     #[account(mut)]
     pub crate_underlying_tokens: Box<Account<'info, TokenAccount>>,
 
+    /// Destination of the underlying tokens being redeemed.
     #[account(mut)]
     pub underlying_token_destination: Box<Account<'info, TokenAccount>>,
-
-    /// [Mint] of the underlying asset.
-    pub underlying_mint: Account<'info, Mint>,
 
     /// The writer crate token.
     pub writer_crate_token: Box<Account<'info, CrateToken>>,
 
-    /// The [CrateToken] of the writer.
-    pub writer_crate: WriterCrate<'info>,
-
-    #[account(mut)]
-    pub crate_quote_tokens: Box<Account<'info, TokenAccount>>,
-
     /// Token program.
     pub token_program: Program<'info, Token>,
+
     /// Crate token program.
     pub crate_token_program: Program<'info, crate_token::program::CrateToken>,
 }
@@ -260,7 +253,7 @@ pub struct OptionBurn<'info> {
 /// Accounts for [traction::option_redeem].
 #[derive(Accounts)]
 pub struct OptionRedeem<'info> {
-    /// The authority of the [self::writer_token_source] account.
+    /// The authority of the [OptionRedeem::writer_token_source] account.
     #[account(mut)]
     pub writer_authority: Signer<'info>,
     /// The options contract.
