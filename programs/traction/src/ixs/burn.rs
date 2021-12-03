@@ -11,6 +11,10 @@ impl<'info> OptionBurn<'info> {
             return Ok(());
         }
 
+        // TODO: named errors?
+        assert!(burn_amount <= self.writer_token_source.amount);
+        assert!(burn_amount <= self.option_token_source.amount);
+
         // burn writer tokens
         token::burn(
             CpiContext::new(
