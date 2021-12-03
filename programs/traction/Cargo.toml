@@ -1,6 +1,6 @@
 [package]
 name = "traction"
-version = "0.1.1"
+version = "0.2.0"
 description = "Solana program for issuing American options."
 edition = "2018"
 homepage = "https://traction.market"
