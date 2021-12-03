@@ -1134,6 +1134,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "crate-token",
+ "num-traits",
  "spl-associated-token-account",
  "static-pubkey",
  "vipers",

@@ -23,6 +23,7 @@ default = []
 anchor-lang = ">=0.17.0"
 anchor-spl = ">=0.17.0"
 crate-token = { version = "0.3.1", features = ["cpi"] }
+num-traits = "0.2"
 spl-associated-token-account = { version = "1.0.3", features = [
   "no-entrypoint"
 ] }

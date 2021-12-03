@@ -1,7 +1,7 @@
 import { CRATE_ADDRESSES } from "@crateprotocol/crate-sdk";
 import type { Provider } from "@saberhq/solana-contrib";
 import { TransactionEnvelope } from "@saberhq/solana-contrib";
-import type { Price, TokenInfo } from "@saberhq/token-utils";
+import type { NumberFormat, Price, TokenInfo, u64 } from "@saberhq/token-utils";
 import {
   getATAAddress,
   getOrCreateATAs,
@@ -11,7 +11,7 @@ import {
 } from "@saberhq/token-utils";
 import type { PublicKey } from "@solana/web3.js";
 
-import { FEE_OWNER } from ".";
+import { FEE_OWNER } from "./constants";
 import { findOptionsContractAddress } from "./pda";
 import type { OptionsContractData, TractionProgram } from "./programs/traction";
 import type { TractionSDK } from "./traction";
@@ -55,13 +55,12 @@ export class OptionsContract {
    * Amount of strike tokens for `10**9` of the underlying.
    * This is used to compute the PDA.
    */
-  get strikeAmount(): TokenAmount {
-    return this.strike.quote(new TokenAmount(this.underlying, 10 ** 9));
+  get rawStrike(): u64 {
+    return this.strike.quote(new TokenAmount(this.underlying, 10 ** 9)).toU64();
   }
 
   /**
    * Amount of strike tokens for 1 unit of the underlying.
-   * This is used to compute the PDA.
    */
   get strikeQuoteForUnderlying(): TokenAmount {
     return this.strike.quote(
@@ -122,20 +121,23 @@ export class OptionsContract {
   }
 
   get renderedStrike(): TokenAmount {
-    return this.isPut
-      ? this.strikeUnderlyingForQuote
-      : this.strikeQuoteForUnderlying;
+    return this.strikeUnderlyingForQuote;
   }
 
-  get formattedStrike(): string {
-    return this.renderedStrike.formatUnits();
+  /**
+   * Formats the strike.
+   * @param format
+   * @returns
+   */
+  formatStrike(format?: NumberFormat | undefined): string {
+    return this.renderedStrike.formatUnits(format);
   }
 
   /**
    * Decimals that this option should have.
    */
   get decimals(): number {
-    return this.isPut ? this.quote.decimals : this.underlying.decimals;
+    return this.underlying.decimals;
   }
 
   /**
@@ -156,7 +158,7 @@ export class OptionsContract {
   get name(): string {
     return `${this.formattedExpiry} ${
       this.isPut ? this.quote.symbol : this.underlying.symbol
-    } ${this.formattedStrike} ${this.isPut ? " PUT" : " CALL"}`;
+    } ${this.formatStrike()} ${this.isPut ? " PUT" : " CALL"}`;
   }
 
   /**
@@ -209,7 +211,7 @@ export class OptionsContract {
     return await findOptionsContractAddress({
       underlyingMint: this.underlying.mintAccount,
       quoteMint: this.strike.quoteCurrency.mintAccount,
-      strike: this.strikeAmount.toU64(),
+      strike: this.rawStrike,
       expiryTs: this.expiryTs,
       isPut: this.isPut,
     });
@@ -231,7 +233,7 @@ export class OptionsContract {
     const writerATAs = await getOrCreateATAs({
       provider: this.provider,
       mints: {
-        underlying: this.underlying.mintAccount,
+        collateral: this.collateralToken.mintAccount,
         writer: contractData.writerMint,
         option: contractData.optionMint,
       },
@@ -239,7 +241,7 @@ export class OptionsContract {
     const crateATAs = await getOrCreateATAs({
       provider: this.provider,
       mints: {
-        underlying: this.underlying.mintAccount,
+        collateral: this.collateralToken.mintAccount,
       },
       owner: contractData.writerCrate,
     });
@@ -249,10 +251,10 @@ export class OptionsContract {
         writerAuthority,
         contract,
 
-        userUnderlyingFundingTokens: writerATAs.accounts.underlying,
+        userCollateralFundingTokens: writerATAs.accounts.collateral,
         writerTokenDestination: writerATAs.accounts.writer,
         optionTokenDestination: writerATAs.accounts.option,
-        crateUnderlyingTokens: crateATAs.accounts.underlying,
+        crateCollateralTokens: crateATAs.accounts.collateral,
         writerMint: contractData.writerMint,
         optionMint: contractData.optionMint,
 
@@ -285,39 +287,39 @@ export class OptionsContract {
     const writerATAs = await getOrCreateATAs({
       provider: this.provider,
       mints: {
-        underlying: this.underlying.mintAccount,
+        collateral: this.collateralToken.mintAccount,
         option: contractData.optionMint,
-        quote: this.quote.mintAccount,
+        exercise: this.exerciseToken.mintAccount,
       },
     });
     const crateATAs = await getOrCreateATAs({
       provider: this.provider,
       mints: {
-        quote: this.quote.mintAccount,
-        underlying: this.underlying.mintAccount,
+        collateral: this.collateralToken.mintAccount,
+        exercise: this.exerciseToken.mintAccount,
       },
       owner: contractData.writerCrate,
     });
-    const exerciseFeeQuoteDestination = await getATAAddress({
-      mint: this.quote.mintAccount,
+    const exerciseFeeDestination = await getATAAddress({
+      mint: this.exerciseToken.mintAccount,
       owner: FEE_OWNER,
     });
 
-    const writeIX = this.program.instruction.optionExercise(
+    const exerciseIX = this.program.instruction.optionExercise(
       optionAmount.toU64(),
       {
         accounts: {
           exerciserAuthority,
           contract,
 
-          quoteTokenSource: writerATAs.accounts.quote,
-          crateQuoteTokens: crateATAs.accounts.quote,
+          exerciseTokenSource: writerATAs.accounts.exercise,
           optionMint: contractData.optionMint,
           optionTokenSource: writerATAs.accounts.option,
           writerCrateToken: contractData.writerCrate,
-          crateUnderlyingTokens: crateATAs.accounts.underlying,
-          underlyingTokenDestination: writerATAs.accounts.underlying,
-          exerciseFeeQuoteDestination,
+          crateCollateralTokens: crateATAs.accounts.collateral,
+          crateExerciseTokens: crateATAs.accounts.exercise,
+          collateralTokenDestination: writerATAs.accounts.collateral,
+          exerciseFeeDestination,
 
           tokenProgram: TOKEN_PROGRAM_ID,
           crateTokenProgram: CRATE_ADDRESSES.CrateToken,
@@ -328,7 +330,7 @@ export class OptionsContract {
     return new TransactionEnvelope(this.provider, [
       ...writerATAs.instructions,
       ...crateATAs.instructions,
-      writeIX,
+      exerciseIX,
     ]);
   }
 
@@ -351,6 +353,20 @@ export class OptionsContract {
     }
     this._data = contractData;
     return { key: contract, data: contractData };
+  }
+
+  /**
+   * Collateral token.
+   */
+  get collateralToken(): Token {
+    return this.isPut ? this.quote : this.underlying;
+  }
+
+  /**
+   * Exercise token.
+   */
+  get exerciseToken(): Token {
+    return this.isPut ? this.underlying : this.quote;
   }
 
   /**
@@ -377,8 +393,8 @@ export class OptionsContract {
     const crateATAs = await getOrCreateATAs({
       provider: this.provider,
       mints: {
-        underlying: this.underlying.mintAccount,
-        quote: this.quote.mintAccount,
+        collateral: this.collateralToken.mintAccount,
+        exercise: this.exerciseToken.mintAccount,
       },
       owner: contractData.writerCrate,
     });
@@ -392,8 +408,8 @@ export class OptionsContract {
 
           writerTokenSource: writerATAs.accounts.writer,
           writerMint: contractData.writerMint,
-          crateUnderlyingTokens: crateATAs.accounts.underlying,
-          crateQuoteTokens: crateATAs.accounts.quote,
+          crateCollateralTokens: crateATAs.accounts.collateral,
+          crateExerciseTokens: crateATAs.accounts.exercise,
           underlyingTokenDestination: writerATAs.accounts.underlying,
           quoteTokenDestination: writerATAs.accounts.quote,
 

@@ -39,6 +39,7 @@ pub mod traction {
     /// - `quote_mint`, the mint of the quote token
     /// - `strike`, the strike price to purchase 10**underlying_decimals of the underlying
     /// - `expiry_ts`, when the option expires.
+    /// - `is_put`, which defines whether the option is a put or a call.
     ///
     /// Anyone can create the [OptionsContract].
     ///
@@ -78,7 +79,12 @@ pub mod traction {
 
 /// Accounts for [traction::new_contract].
 #[derive(Accounts)]
-#[instruction(strike: u64, expiry_ts: u64, is_put: bool, contract_bump: u8)]
+#[instruction(
+    strike: u64,
+    expiry_ts: u64,
+    is_put: bool,
+    contract_bump: u8
+)]
 pub struct NewContract<'info> {
     #[account(
         init,
@@ -88,7 +94,7 @@ pub struct NewContract<'info> {
             quote_mint.key().to_bytes().as_ref(),
             strike.to_le_bytes().as_ref(),
             expiry_ts.to_le_bytes().as_ref(),
-            (if is_put { &[1_u8] } else { &[0_u8] }),
+            (if is_put { &[1_u8] } else { &[0_u8] })
         ],
         bump = contract_bump,
         payer = payer
@@ -132,15 +138,15 @@ pub struct OptionWrite<'info> {
     pub writer_authority: Signer<'info>,
     /// The options contract.
     pub contract: Box<Account<'info, OptionsContract>>,
-    /// The user's underlying tokens used to fund writing the options.
+    /// The user's collateral tokens used to fund writing the options.
     #[account(mut)]
-    pub user_underlying_funding_tokens: Box<Account<'info, TokenAccount>>,
+    pub user_collateral_funding_tokens: Box<Account<'info, TokenAccount>>,
     /// The option token account to send to.
     #[account(mut)]
     pub option_token_destination: Box<Account<'info, TokenAccount>>,
     /// The [OptionsContract::writer_crate]'s underlying tokens which collateralize the options.
     #[account(mut)]
-    pub crate_underlying_tokens: Box<Account<'info, TokenAccount>>,
+    pub crate_collateral_tokens: Box<Account<'info, TokenAccount>>,
 
     /// The writer token account to send to.
     #[account(mut)]
@@ -165,14 +171,13 @@ pub struct OptionWrite<'info> {
 #[derive(Accounts)]
 pub struct OptionExercise<'info> {
     /// The authority of the [option_token_source] account.
-    #[account(mut)]
     pub exerciser_authority: Signer<'info>,
     /// The options contract.
     pub contract: Box<Account<'info, OptionsContract>>,
 
-    /// The [exerciser_authority]'s quote tokens used to pay for the exercise of the options.
+    /// The [exerciser_authority]'s tokens used to pay for the exercise of the options.
     #[account(mut)]
-    pub quote_token_source: Box<Account<'info, TokenAccount>>,
+    pub exercise_token_source: Box<Account<'info, TokenAccount>>,
 
     /// The option mint.
     #[account(mut)]
@@ -183,18 +188,18 @@ pub struct OptionExercise<'info> {
 
     /// The writer crate token.
     pub writer_crate_token: Box<Account<'info, CrateToken>>,
-    /// The writer crate's underlying tokens which collateralize the options.
+    /// The writer crate's collateral tokens which collateralize the options.
     #[account(mut)]
-    pub crate_underlying_tokens: Box<Account<'info, TokenAccount>>,
-    /// The writer crate's quote tokens which are obtained when options are exercised.
+    pub crate_collateral_tokens: Box<Account<'info, TokenAccount>>,
+    /// The writer crate's exercise tokens which are obtained when options are exercised.
     #[account(mut)]
-    pub crate_quote_tokens: Box<Account<'info, TokenAccount>>,
-    /// The option token account to send to.
+    pub crate_exercise_tokens: Box<Account<'info, TokenAccount>>,
+    /// The collateral token account to send to.
     #[account(mut)]
-    pub underlying_token_destination: Box<Account<'info, TokenAccount>>,
-    /// The token account to send the quote asset to for exercise fees.
+    pub collateral_token_destination: Box<Account<'info, TokenAccount>>,
+    /// The token account to send the exercise fees.
     #[account(mut)]
-    pub exercise_fee_quote_destination: Box<Account<'info, TokenAccount>>,
+    pub exercise_fee_destination: Box<Account<'info, TokenAccount>>,
 
     /// Token program.
     pub token_program: Program<'info, Token>,
@@ -226,12 +231,12 @@ pub struct OptionRedeem<'info> {
 
     /// The writer crate token.
     pub writer_crate_token: Box<Account<'info, CrateToken>>,
-    /// The [CrateToken]'s underlying tokens which collateralize the options.
+    /// The [CrateToken]'s tokens which collateralize the options.
     #[account(mut)]
-    pub crate_underlying_tokens: Box<Account<'info, TokenAccount>>,
-    /// The [CrateToken]'s quote tokens.
+    pub crate_collateral_tokens: Box<Account<'info, TokenAccount>>,
+    /// The [CrateToken]'s exercise tokens.
     #[account(mut)]
-    pub crate_quote_tokens: Box<Account<'info, TokenAccount>>,
+    pub crate_exercise_tokens: Box<Account<'info, TokenAccount>>,
 
     /// Token program.
     pub token_program: Program<'info, Token>,
@@ -250,14 +255,10 @@ pub enum ErrorCode {
     ContractExpired,
     #[msg("Cannot redeem until contract expiry.")]
     ContractNotYetExpired,
-
-    #[msg(
-        "A call option mint must have the same decimals as the underlying.",
-        offset = 10
-    )]
-    CallDecimalMismatch,
-    #[msg("A put option mint must have the same decimals as the quote.")]
-    PutDecimalMismatch,
+    #[msg("A writer mint must have the same decimals as the underlying.")]
+    WriterDecimalMismatch,
+    #[msg("An option mint must have the same decimals as the underlying.")]
+    OptionDecimalMismatch,
     #[msg("The underlying and quote mints should not match.")]
     UselessMints,
     #[msg("Option mint must have zero supply.")]

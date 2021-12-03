@@ -14,18 +14,6 @@ impl<'info> NewContract<'info> {
         contract_bump: u8,
         crate_bump: u8,
     ) -> ProgramResult {
-        if is_put {
-            require!(
-                self.quote_mint.decimals == self.option_mint.decimals,
-                PutDecimalMismatch
-            );
-        } else {
-            require!(
-                self.underlying_mint.decimals == self.option_mint.decimals,
-                CallDecimalMismatch
-            );
-        }
-
         // initialize the writer crate
         // The writer crate holds all options.
         crate_token::cpi::new_crate(
@@ -60,14 +48,14 @@ impl<'info> NewContract<'info> {
 
         contract.writer_mint = self.writer_crate.crate_mint.key();
         contract.writer_crate = self.writer_crate.crate_token.key();
-        contract.crate_underlying_tokens =
+        contract.crate_collateral_tokens =
             spl_associated_token_account::get_associated_token_address(
                 &self.writer_crate.crate_token.key(),
-                &contract.underlying_mint,
+                &contract.collateral_mint(),
             );
-        contract.crate_quote_tokens = spl_associated_token_account::get_associated_token_address(
+        contract.crate_exercise_tokens = spl_associated_token_account::get_associated_token_address(
             &self.writer_crate.crate_token.key(),
-            &contract.quote_mint,
+            &contract.exercise_mint(),
         );
         contract.option_mint = self.option_mint.key();
 
@@ -85,6 +73,16 @@ impl<'info> Validate<'info> for NewContract<'info> {
         require!(self.option_mint.supply == 0, OptionMintMustHaveZeroSupply);
 
         assert_keys_neq!(self.underlying_mint, self.quote_mint, UselessMints);
+
+        require!(
+            self.underlying_mint.decimals == self.option_mint.decimals,
+            OptionDecimalMismatch
+        );
+        require!(
+            self.underlying_mint.decimals == self.writer_crate.crate_mint.decimals,
+            WriterDecimalMismatch
+        );
+
         Ok(())
     }
 }
