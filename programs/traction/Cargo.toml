@@ -27,4 +27,4 @@ spl-associated-token-account = { version = "1.0.3", features = [
   "no-entrypoint"
 ] }
 static-pubkey = "1.0.2"
-vipers = "1.5.1"
+vipers = "^1.5.3"
