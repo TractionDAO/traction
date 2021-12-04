@@ -129,11 +129,18 @@ describe("Traction options", () => {
     const loaded = await sdk.loadContractFromKey({ key: optionsContractKey });
     expect(loaded).to.not.be.null;
     invariant(loaded);
+    expect(loaded.strike.equalTo(strike));
+    expect(loaded.expiryTs).equal(expiryTs);
+
     const [loadedAddr] = await loaded.findAddress();
     expect(loadedAddr).to.eqAddress(optionsContractKey);
 
     const ownerWriterAccount = await getATAAddress({
       mint: writerToken.mintAccount,
+      owner: ownerKP.publicKey,
+    });
+    const ownerOptionTokenAccount = await getATAAddress({
+      mint: optionToken.mintAccount,
       owner: ownerKP.publicKey,
     });
 
@@ -153,6 +160,9 @@ describe("Traction options", () => {
     ).to.bignumber.eq(quoteAmount);
     expect(
       (await getTokenAccount(provider, ownerWriterAccount)).amount
+    ).to.bignumber.eq(writeAmount.toU64());
+    expect(
+      (await getTokenAccount(provider, ownerOptionTokenAccount)).amount
     ).to.bignumber.eq(writeAmount.toU64());
 
     // exercise 1k of SOL options

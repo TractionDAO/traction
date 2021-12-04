@@ -168,7 +168,7 @@ export class OptionsContract {
    * @returns
    */
   async generateTokenInfo(): Promise<TokenInfo> {
-    const [address] = await this.findAddress();
+    const address = (await this.fetch()).data.optionMint.toString();
     return {
       chainId: this.underlying.chainId,
       address: address.toString(),
