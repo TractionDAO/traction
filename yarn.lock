@@ -294,6 +294,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@saberhq/tsconfig@npm:^1.11.3":
+  version: 1.11.3
+  resolution: "@saberhq/tsconfig@npm:1.11.3"
+  checksum: 7b73bafb0bd7a6c6d5582d10f18c1d0baa00193cb638d7c57c4d9d53acc23d72af9100b7b28244574abc0c0d6b034402ac626ce0ad23a0acc66eaa41324013ec
+  languageName: node
+  linkType: hard
+
 "@solana/buffer-layout@npm:^3.0.0":
   version: 3.0.0
   resolution: "@solana/buffer-layout@npm:3.0.0"
@@ -389,6 +396,7 @@ __metadata:
     "@saberhq/eslint-config": ^1.11.3
     "@saberhq/solana-contrib": ^1.11.3
     "@saberhq/token-utils": ^1.11.3
+    "@saberhq/tsconfig": ^1.11.3
     "@solana/web3.js": ^1.31.0
     "@types/bn.js": ^5.1.0
     "@types/mocha": ^9.0.0
