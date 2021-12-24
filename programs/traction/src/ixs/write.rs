@@ -6,7 +6,7 @@ use anchor_spl::token;
 impl<'info> OptionWrite<'info> {
     pub fn write(&self, write_amount: u64) -> ProgramResult {
         let user_collateral_funding_tokens = &self.user_collateral_funding_tokens;
-        require!(
+        invariant!(
             user_collateral_funding_tokens.amount >= write_amount,
             InsufficientCollateral
         );
@@ -85,7 +85,7 @@ impl<'info> OptionWrite<'info> {
 impl<'info> Validate<'info> for OptionWrite<'info> {
     fn validate(&self) -> ProgramResult {
         let now = Clock::get()?.unix_timestamp;
-        require!(now < self.contract.expiry_ts, ContractExpired);
+        invariant!(now < self.contract.expiry_ts, ContractExpired);
 
         assert_keys_eq!(
             self.writer_authority,

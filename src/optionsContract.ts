@@ -23,10 +23,10 @@ export class OptionsContract {
   private _data: OptionsContractData | null = null;
 
   constructor(
-    public readonly sdk: TractionSDK,
-    public readonly strike: Price,
-    public readonly expiryTs: number,
-    public readonly isPut: boolean
+    readonly sdk: TractionSDK,
+    readonly strike: Price,
+    readonly expiryTs: number,
+    readonly isPut: boolean
   ) {}
 
   get program(): TractionProgram {

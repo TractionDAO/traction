@@ -70,15 +70,15 @@ impl<'info> Validate<'info> for NewContract<'info> {
         // ensure we have full control over the mint provided
         assert_keys_eq!(self.option_mint.mint_authority.unwrap(), self.contract);
         assert_keys_eq!(self.option_mint.freeze_authority.unwrap(), self.contract);
-        require!(self.option_mint.supply == 0, OptionMintMustHaveZeroSupply);
+        invariant!(self.option_mint.supply == 0, OptionMintMustHaveZeroSupply);
 
         assert_keys_neq!(self.underlying_mint, self.quote_mint, UselessMints);
 
-        require!(
+        invariant!(
             self.underlying_mint.decimals == self.option_mint.decimals,
             OptionDecimalMismatch
         );
-        require!(
+        invariant!(
             self.underlying_mint.decimals == self.writer_crate.crate_mint.decimals,
             WriterDecimalMismatch
         );

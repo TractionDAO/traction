@@ -36,8 +36,8 @@ export interface TractionPrograms {
  */
 export class TractionSDK {
   constructor(
-    public readonly provider: AugmentedProvider,
-    public readonly programs: TractionPrograms
+    readonly provider: AugmentedProvider,
+    readonly programs: TractionPrograms
   ) {}
 
   /**

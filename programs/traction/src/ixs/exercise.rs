@@ -88,7 +88,7 @@ impl<'info> OptionExercise<'info> {
 impl<'info> Validate<'info> for OptionExercise<'info> {
     fn validate(&self) -> ProgramResult {
         let now = Clock::get()?.unix_timestamp;
-        require!(now < self.contract.expiry_ts, ContractExpired);
+        invariant!(now < self.contract.expiry_ts, ContractExpired);
 
         assert_keys_eq!(self.exercise_token_source.owner, self.exerciser_authority);
         assert_keys_eq!(

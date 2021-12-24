@@ -87,7 +87,7 @@ impl<'info> Validate<'info> for OptionRedeem<'info> {
     fn validate(&self) -> ProgramResult {
         // can only redeem when the contract has expired.
         let now = Clock::get()?.unix_timestamp;
-        require!(now >= self.contract.expiry_ts, ContractNotYetExpired);
+        invariant!(now >= self.contract.expiry_ts, ContractNotYetExpired);
 
         assert_keys_eq!(self.writer_authority, self.writer_token_source.owner);
         assert_keys_eq!(self.writer_token_source.mint, self.contract.writer_mint);
