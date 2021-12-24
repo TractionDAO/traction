@@ -5,5 +5,5 @@ cd $(dirname $0)/..
 mkdir -p artifacts/programs/
 
 # crate
-solana program dump CRATwLpu6YZEeiVq9ajjxs61wPQ9f29s1UoQR9siJCRs \
-    artifacts/programs/crate_token.so --url mainnet-beta
+curl -L https://github.com/CrateProtocol/crate/releases/download/v0.4.0/crate_token.so > \
+    artifacts/programs/crate_token.so

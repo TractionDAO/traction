@@ -14,7 +14,6 @@ import {
   getOrCreateATAs,
   Price,
   Token,
-  TokenAmount,
   u64,
 } from "@saberhq/token-utils";
 import type { PublicKey, Signer } from "@solana/web3.js";
@@ -37,8 +36,8 @@ export interface TractionPrograms {
  */
 export class TractionSDK {
   constructor(
-    public readonly provider: AugmentedProvider,
-    public readonly programs: TractionPrograms
+    readonly provider: AugmentedProvider,
+    readonly programs: TractionPrograms
   ) {}
 
   /**
@@ -183,16 +182,13 @@ export class TractionSDK {
     const createOptionMint = await createInitMintInstructions({
       provider: this.provider,
       mintKP: optionMintKP,
-      decimals: optionsContract.decimals,
+      decimals: underlying.decimals,
       mintAuthority: contractKey,
       freezeAuthority: contractKey,
     });
 
-    // normalize strike to 10*9 of underlying
-    const strikeNormalized = strike.quote(new TokenAmount(underlying, 10 ** 9));
-
     const newContractIx = this.programs.Traction.instruction.newContract(
-      strikeNormalized.toU64(),
+      optionsContract.rawStrike,
       new u64(expiryTs),
       isPut,
       contractBump,
@@ -221,7 +217,7 @@ export class TractionSDK {
     const feeATAs = await getOrCreateATAs({
       provider: this.provider,
       mints: {
-        quote: optionsContract.quote.mintAccount,
+        exercise: optionsContract.exerciseToken.mintAccount,
       },
       owner: FEE_OWNER,
     });

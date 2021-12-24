@@ -5,9 +5,9 @@ use anchor_spl::token;
 
 impl<'info> OptionWrite<'info> {
     pub fn write(&self, write_amount: u64) -> ProgramResult {
-        let user_underlying_funding_tokens = &self.user_underlying_funding_tokens;
-        require!(
-            user_underlying_funding_tokens.amount >= write_amount,
+        let user_collateral_funding_tokens = &self.user_collateral_funding_tokens;
+        invariant!(
+            user_collateral_funding_tokens.amount >= write_amount,
             InsufficientCollateral
         );
 
@@ -31,8 +31,8 @@ impl<'info> OptionWrite<'info> {
             CpiContext::new(
                 self.token_program.to_account_info(),
                 token::Transfer {
-                    from: self.user_underlying_funding_tokens.to_account_info(),
-                    to: self.crate_underlying_tokens.to_account_info(),
+                    from: self.user_collateral_funding_tokens.to_account_info(),
+                    to: self.crate_collateral_tokens.to_account_info(),
                     authority: self.writer_authority.to_account_info(),
                 },
             ),
@@ -85,16 +85,16 @@ impl<'info> OptionWrite<'info> {
 impl<'info> Validate<'info> for OptionWrite<'info> {
     fn validate(&self) -> ProgramResult {
         let now = Clock::get()?.unix_timestamp;
-        require!(now < self.contract.expiry_ts, ContractExpired);
+        invariant!(now < self.contract.expiry_ts, ContractExpired);
 
         assert_keys_eq!(
             self.writer_authority,
-            self.user_underlying_funding_tokens.owner
+            self.user_collateral_funding_tokens.owner
         );
         // option_token_destination checks are redundant
         assert_keys_eq!(
-            self.crate_underlying_tokens,
-            self.contract.crate_underlying_tokens
+            self.crate_collateral_tokens,
+            self.contract.crate_collateral_tokens
         );
         // writer_token_destination checks not needed
         assert_keys_eq!(self.writer_crate_token, self.contract.writer_crate);

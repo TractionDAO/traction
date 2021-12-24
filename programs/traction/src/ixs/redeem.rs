@@ -2,21 +2,16 @@
 
 use crate::*;
 use anchor_spl::token;
+use num_traits::ToPrimitive;
 
 impl<'info> OptionRedeem<'info> {
     /// Helper to redeem the writer crate.
     pub fn redeem(&self, writer_amount: u64) -> ProgramResult {
         // calculate share of the tokens
-        let underlying_amount = unwrap_int!(self
-            .crate_underlying_tokens
-            .amount
-            .checked_mul(self.writer_token_source.amount)
-            .and_then(|v| v.checked_div(self.writer_mint.supply)));
-        let quote_amount = unwrap_int!(self
-            .crate_quote_tokens
-            .amount
-            .checked_mul(self.writer_token_source.amount)
-            .and_then(|v| v.checked_div(self.writer_mint.supply)));
+        let collateral_amount = unwrap_int!((self.crate_collateral_tokens.amount as u128)
+            .checked_mul(self.writer_token_source.amount.into())
+            .and_then(|v| v.checked_div(self.writer_mint.supply.into()))
+            .and_then(|v| v.to_u64()));
 
         // burn writer tokens
         token::burn(
@@ -38,7 +33,7 @@ impl<'info> OptionRedeem<'info> {
                 self.crate_token_program.to_account_info(),
                 crate_token::cpi::accounts::Withdraw {
                     crate_token: self.writer_crate_token.to_account_info(),
-                    crate_underlying: self.crate_underlying_tokens.to_account_info(),
+                    crate_underlying: self.crate_collateral_tokens.to_account_info(),
                     withdraw_authority: self.contract.to_account_info(),
                     withdraw_destination: self.underlying_token_destination.to_account_info(),
                     // no fees here
@@ -48,25 +43,33 @@ impl<'info> OptionRedeem<'info> {
                 },
                 seeds,
             ),
-            underlying_amount,
+            collateral_amount,
         )?;
-        crate_token::cpi::withdraw(
-            CpiContext::new_with_signer(
-                self.crate_token_program.to_account_info(),
-                crate_token::cpi::accounts::Withdraw {
-                    crate_token: self.writer_crate_token.to_account_info(),
-                    crate_underlying: self.crate_quote_tokens.to_account_info(),
-                    withdraw_authority: self.contract.to_account_info(),
-                    withdraw_destination: self.quote_token_destination.to_account_info(),
-                    // no fees here
-                    author_fee_destination: self.quote_token_destination.to_account_info(),
-                    protocol_fee_destination: self.quote_token_destination.to_account_info(),
-                    token_program: self.token_program.to_account_info(),
-                },
-                seeds,
-            ),
-            quote_amount,
-        )?;
+
+        // redeem exercise tokens if they are different from the collateral tokens
+        if self.crate_collateral_tokens.mint != self.crate_exercise_tokens.mint {
+            let exercise_amount = unwrap_int!((self.crate_exercise_tokens.amount as u128)
+                .checked_mul(self.writer_token_source.amount.into())
+                .and_then(|v| v.checked_div(self.writer_mint.supply.into()))
+                .and_then(|v| v.to_u64()));
+            crate_token::cpi::withdraw(
+                CpiContext::new_with_signer(
+                    self.crate_token_program.to_account_info(),
+                    crate_token::cpi::accounts::Withdraw {
+                        crate_token: self.writer_crate_token.to_account_info(),
+                        crate_underlying: self.crate_exercise_tokens.to_account_info(),
+                        withdraw_authority: self.contract.to_account_info(),
+                        withdraw_destination: self.quote_token_destination.to_account_info(),
+                        // no fees here
+                        author_fee_destination: self.quote_token_destination.to_account_info(),
+                        protocol_fee_destination: self.quote_token_destination.to_account_info(),
+                        token_program: self.token_program.to_account_info(),
+                    },
+                    seeds,
+                ),
+                exercise_amount,
+            )?;
+        }
 
         emit!(OptionRedeemEvent {
             contract: self.contract.key(),
@@ -83,7 +86,7 @@ impl<'info> Validate<'info> for OptionRedeem<'info> {
     fn validate(&self) -> ProgramResult {
         // can only redeem when the contract has expired.
         let now = Clock::get()?.unix_timestamp;
-        require!(now >= self.contract.expiry_ts, ContractNotYetExpired);
+        invariant!(now >= self.contract.expiry_ts, ContractNotYetExpired);
 
         assert_keys_eq!(self.writer_authority, self.writer_token_source.owner);
         assert_keys_eq!(self.writer_token_source.mint, self.contract.writer_mint);
@@ -91,10 +94,13 @@ impl<'info> Validate<'info> for OptionRedeem<'info> {
 
         assert_keys_eq!(self.writer_crate_token, self.contract.writer_crate);
         assert_keys_eq!(
-            self.crate_underlying_tokens,
-            self.contract.crate_underlying_tokens
+            self.crate_collateral_tokens,
+            self.contract.crate_collateral_tokens
         );
-        assert_keys_eq!(self.crate_quote_tokens, self.contract.crate_quote_tokens);
+        assert_keys_eq!(
+            self.crate_exercise_tokens,
+            self.contract.crate_exercise_tokens
+        );
 
         Ok(())
     }

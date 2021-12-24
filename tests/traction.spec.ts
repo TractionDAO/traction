@@ -49,14 +49,14 @@ describe("Traction options", () => {
       await connection.requestAirdrop(ownerKP.publicKey, 10 * LAMPORTS_PER_SOL)
     );
 
-    const underlyingAmount = new u64(1_000_000);
-    const quoteAmount = new u64(1_000_000);
+    const underlyingAmount = new u64(1_000_000 * LAMPORTS_PER_SOL);
+    const quoteAmount = new u64(1_000_000 * 10 ** 6);
 
     const [underlyingMint, underlyingTokens] = await createMintAndVault(
       provider,
       underlyingAmount,
       undefined,
-      6
+      9
     );
     const [quoteMint, quoteTokens] = await createMintAndVault(
       provider,
@@ -64,7 +64,7 @@ describe("Traction options", () => {
       undefined,
       6
     );
-    const underlying = Token.fromMint(underlyingMint, 6);
+    const underlying = Token.fromMint(underlyingMint, 9);
     const quote = Token.fromMint(quoteMint, 6);
 
     const ownerATAs = await getOrCreateATAs({
@@ -97,7 +97,12 @@ describe("Traction options", () => {
     await expectTX(txEnv, "seed accounts").to.be.fulfilled;
 
     // strike of 1 SOL (underlying) = $100
-    const strike = new Price(underlying, quote, 1, 100);
+    const strike = new Price(
+      underlying,
+      quote,
+      LAMPORTS_PER_SOL,
+      100 * 10 ** 6
+    );
     const expiry = new Date(Date.now() + 5 * 1000); // 5 seconds to expiry
     const expiryTs = dateToTimestamp(expiry);
 
@@ -124,6 +129,9 @@ describe("Traction options", () => {
     const loaded = await sdk.loadContractFromKey({ key: optionsContractKey });
     expect(loaded).to.not.be.null;
     invariant(loaded);
+    expect(loaded.strike.equalTo(strike));
+    expect(loaded.expiryTs).equal(expiryTs);
+
     const [loadedAddr] = await loaded.findAddress();
     expect(loadedAddr).to.eqAddress(optionsContractKey);
 
@@ -131,9 +139,13 @@ describe("Traction options", () => {
       mint: writerToken.mintAccount,
       owner: ownerKP.publicKey,
     });
+    const ownerOptionTokenAccount = await getATAAddress({
+      mint: optionToken.mintAccount,
+      owner: ownerKP.publicKey,
+    });
 
     // write 1k of SOL options
-    const writeAmount = new TokenAmount(optionToken, 1_000);
+    const writeAmount = new TokenAmount(optionToken, 1_000 * LAMPORTS_PER_SOL);
     const writeTX = await optionsContract.write({
       writeAmount,
     });
@@ -149,21 +161,24 @@ describe("Traction options", () => {
     expect(
       (await getTokenAccount(provider, ownerWriterAccount)).amount
     ).to.bignumber.eq(writeAmount.toU64());
+    expect(
+      (await getTokenAccount(provider, ownerOptionTokenAccount)).amount
+    ).to.bignumber.eq(writeAmount.toU64());
 
     // exercise 1k of SOL options
     const exerciseTX = await optionsContract.exercise({
-      optionAmount: new TokenAmount(optionToken, 1_000),
+      optionAmount: new TokenAmount(optionToken, 1_000 * LAMPORTS_PER_SOL),
     });
     await expectTX(exerciseTX, "exercise options").to.be.fulfilled;
 
-    // got the 100 back
+    // SOL should not be touched
     expect(
       (await getTokenAccount(provider, ownerATAs.accounts.underlying)).amount
     ).to.bignumber.eq(underlyingAmount);
-    // don't have the cash anymore
+    // cash account should have paid 1k * $100 for the SOL
     expect(
       (await getTokenAccount(provider, ownerATAs.accounts.quote)).amount
-    ).to.bignumber.eq(quoteAmount.sub(new u64(1_000 * 100)));
+    ).to.bignumber.eq(quoteAmount.sub(new u64(1_000 * 100 * 10 ** 6)));
 
     // wait for expiry... is there a better way to do this?
     await sleep(5_000);
@@ -172,13 +187,16 @@ describe("Traction options", () => {
     });
     await expectTX(redeemTX, "redeem").to.be.fulfilled;
 
-    // we should have the cash again,
-    // minus exercise fees
+    // we should have the cash again, minus the 1bp fee
     expect(
       (await getTokenAccount(provider, ownerATAs.accounts.quote)).amount
     ).to.bignumber.eq(
-      quoteAmount.sub(new u64(1_000 * 100).div(new BN(10_000)))
+      quoteAmount.sub(new u64(1_000 * 100 * 10 ** 6).div(new BN(10_000)))
     );
+    // and we have all of our SOL back.
+    expect(
+      (await getTokenAccount(provider, ownerATAs.accounts.underlying)).amount
+    ).to.bignumber.eq(underlyingAmount);
     expect(
       (await getTokenAccount(provider, ownerWriterAccount)).amount
     ).to.bignumber.eq(new u64(0));
