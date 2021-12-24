@@ -238,13 +238,13 @@ pub struct OptionBurn<'info> {
     #[account(mut)]
     pub option_token_source: Box<Account<'info, TokenAccount>>,
 
-    /// Crate source of underlying tokens.
+    /// Crate source of collateral tokens.
     #[account(mut)]
-    pub crate_underlying_tokens: Box<Account<'info, TokenAccount>>,
+    pub crate_collateral_tokens: Box<Account<'info, TokenAccount>>,
 
     /// Destination of the underlying tokens being redeemed.
     #[account(mut)]
-    pub underlying_token_destination: Box<Account<'info, TokenAccount>>,
+    pub collateral_token_destination: Box<Account<'info, TokenAccount>>,
 
     /// The writer crate token.
     pub writer_crate_token: Box<Account<'info, CrateToken>>,

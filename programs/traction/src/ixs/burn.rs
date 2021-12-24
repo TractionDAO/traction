@@ -53,13 +53,13 @@ impl<'info> OptionBurn<'info> {
                 self.crate_token_program.to_account_info(),
                 crate_token::cpi::accounts::Withdraw {
                     crate_token: self.writer_crate_token.to_account_info(),
-                    crate_underlying: self.crate_underlying_tokens.to_account_info(),
+                    crate_underlying: self.crate_collateral_tokens.to_account_info(),
                     withdraw_authority: self.contract.to_account_info(),
-                    withdraw_destination: self.underlying_token_destination.to_account_info(),
+                    withdraw_destination: self.collateral_token_destination.to_account_info(),
 
                     // no fees here
-                    author_fee_destination: self.underlying_token_destination.to_account_info(),
-                    protocol_fee_destination: self.underlying_token_destination.to_account_info(),
+                    author_fee_destination: self.collateral_token_destination.to_account_info(),
+                    protocol_fee_destination: self.collateral_token_destination.to_account_info(),
                     token_program: self.token_program.to_account_info(),
                 },
                 seeds,
@@ -91,8 +91,8 @@ impl<'info> Validate<'info> for OptionBurn<'info> {
         // underlying_token_destination and quote_token_destination don't really matter to validate
         assert_keys_eq!(self.writer_crate_token, self.contract.writer_crate);
         assert_keys_eq!(
-            self.crate_underlying_tokens,
-            self.contract.crate_underlying_tokens
+            self.crate_collateral_tokens,
+            self.contract.crate_collateral_tokens
         );
 
         Ok(())
