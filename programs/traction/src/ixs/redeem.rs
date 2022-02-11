@@ -6,7 +6,6 @@ use num_traits::ToPrimitive;
 
 impl<'info> OptionRedeem<'info> {
     /// Helper to redeem the writer crate.
-    /// This is not necessary.
     pub fn redeem(&self, writer_amount: u64) -> ProgramResult {
         // calculate share of the tokens
         let collateral_amount = unwrap_int!((self.crate_collateral_tokens.amount as u128)

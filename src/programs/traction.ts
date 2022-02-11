@@ -23,3 +23,4 @@ export type OptionWriteEvent = TractionTypes["Events"]["OptionWriteEvent"];
 export type OptionRedeemEvent = TractionTypes["Events"]["OptionRedeemEvent"];
 export type OptionExerciseEvent =
   TractionTypes["Events"]["OptionExerciseEvent"];
+export type OptionBurnEvent = TractionTypes["Events"]["OptionBurnEvent"];

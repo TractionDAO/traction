@@ -15,6 +15,17 @@ pub struct OptionWriteEvent {
     pub timestamp: i64,
 }
 
+/// Emitted on [traction::option_burn].
+#[event]
+pub struct OptionBurnEvent {
+    /// The [OptionsContract].
+    pub contract: Pubkey,
+    /// The amount of option tokens and writer tokens burned.
+    pub burn_amount: u64,
+    /// Timestamp of the event.
+    pub timestamp: i64,
+}
+
 /// Emitted on [traction::option_redeem].
 #[event]
 pub struct OptionRedeemEvent {
