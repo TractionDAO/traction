@@ -400,7 +400,7 @@ __metadata:
     "@solana/web3.js": ^1.31.0
     "@types/bn.js": ^5.1.0
     "@types/mocha": ^9.0.0
-    "@types/node": ^16.11.17
+    "@types/node": ^18.8.4
     "@types/prettier": ^2.4.2
     bn.js: ^5.2.0
     chai: ^4.3.4
@@ -561,10 +561,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^16.11.17":
-  version: 16.11.17
-  resolution: "@types/node@npm:16.11.17"
-  checksum: 86ed84f79450f6aba1a6ef09f8407c10076966c3cc7cc4eb3d35b8ae4f47817e525641396ef0a667fa0a88fcdf484f6182812c074601403083bdf3b5e1ac0313
+"@types/node@npm:^18.8.4":
+  version: 18.8.4
+  resolution: "@types/node@npm:18.8.4"
+  checksum: c2b87f6b0b1f02b2ce61ca7cb93ea287119bda086a3f33e48da8f5e70c24ad7141cc3465946e0e36abb7eba70c7b320c7659842096e4aa573b3a8d557322c818
   languageName: node
   linkType: hard
 
